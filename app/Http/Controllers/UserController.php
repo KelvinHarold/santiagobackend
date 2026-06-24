@@ -82,6 +82,16 @@ class UserController extends Controller
         return response()->json($roles);
     }
 
+    // Lightweight list for the revenue share preview on the daily report form
+    // Only returns id, name, revenue_percentage — no sensitive data
+    public function revenueMembers()
+    {
+        $users = User::where('revenue_percentage', '>', 0)
+            ->select('id', 'name', 'revenue_percentage')
+            ->get();
+        return response()->json($users);
+    }
+
     public function updateProfile(Request $request)
     {
         $user = $request->user();

@@ -15,6 +15,8 @@ use App\Http\Controllers\NotificationController;
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 // All protected routes must be inside auth:sanctum
@@ -30,6 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Revenue Shares — accessible to any authenticated user (used for dashboard)
     Route::get('/revenue-shares', [RevenueShareController::class, 'index']);
     Route::get('/office-total', [RevenueShareController::class, 'officeTotal']);
+
+    // Revenue members — lightweight user list for the upload form share preview
+    Route::get('/revenue-members', [UserController::class, 'revenueMembers']);
 
     // Daily Summaries for Dashboard
     Route::get('/daily-expenses', [DailyReportController::class, 'dailyExpenses']);
@@ -76,11 +81,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy']);
     });
 
-    // Expenses management
+    // Expense categories — read is open to all authenticated users (needed for the daily report form)
+    Route::get('/expense-categories', [ExpenseCategoryController::class, 'index']);
+
+    // Expenses management — write/delete requires ExpensesManagement permission
     Route::middleware('permission:ExpensesManagement')->group(function () {
         Route::get('/expenses', [ExpenseController::class, 'index']);
         Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy']);
-        Route::apiResource('expense-categories', ExpenseCategoryController::class);
+        Route::post('/expense-categories', [ExpenseCategoryController::class, 'store']);
+        Route::get('/expense-categories/{expense_category}', [ExpenseCategoryController::class, 'show']);
+        Route::put('/expense-categories/{expense_category}', [ExpenseCategoryController::class, 'update']);
+        Route::delete('/expense-categories/{expense_category}', [ExpenseCategoryController::class, 'destroy']);
     });
 });
 
