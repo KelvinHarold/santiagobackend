@@ -5,11 +5,15 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // 🔥 Always clear cache first
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         $permissions = [
             'UserManagement',
             'Roles Management',
@@ -19,44 +23,30 @@ class PermissionSeeder extends Seeder
             'ReportView',
         ];
 
-        // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // Remove obsolete permissions not in the new schema
-        Permission::whereNotIn('name', $permissions)->delete();
-
-        // Create new permissions
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission],
-                ['guard_name' => 'sanctum']
-            );
+        // 1. Create permissions (force sanctum guard)
+        foreach ($permissions as $name) {
+            Permission::firstOrCreate([
+                'name' => $name,
+                'guard_name' => 'sanctum',
+            ]);
         }
 
-        // Get roles
-        $adminRole = Role::where('name', 'Admin')->first();
-        $msimamiziRole = Role::where('name', 'Msimamizi')->first();
-        $msaidiziRole = Role::where('name', 'Msaidizi')->first();
+        // 2. Ensure Admin role exists (safe fallback)
+        $adminRole = Role::firstOrCreate([
+            'name' => 'Admin',
+            'guard_name' => 'sanctum',
+        ]);
 
-        // Admin gets all permissions
-        if ($adminRole) {
-            $adminRole->syncPermissions(Permission::all());
-        }
+        // 3. Clear old permissions for clean reset
+        $adminRole->permissions()->detach();
 
-        // Msimamizi/Msaidizi only get ReportUpload & ReportView
-        $basicPermissions = Permission::whereIn('name', [
-            'ReportUpload',
-            'ReportView',
-        ])->get();
+        // 4. Attach permissions safely (NO syncPermissions)
+        $permissionIds = Permission::where('guard_name', 'sanctum')
+            ->pluck('id')
+            ->toArray();
 
-        if ($msimamiziRole) {
-            $msimamiziRole->syncPermissions($basicPermissions);
-        }
+        $adminRole->permissions()->attach($permissionIds);
 
-        if ($msaidiziRole) {
-            $msaidiziRole->syncPermissions($basicPermissions);
-        }
-
-        echo "✅ Permissions updated successfully.\n";
+        $this->command->info('✅ Permissions successfully linked to Admin role.');
     }
 }

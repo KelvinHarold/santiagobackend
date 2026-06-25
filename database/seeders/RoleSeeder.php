@@ -18,11 +18,12 @@ class RoleSeeder extends Seeder
         ];
 
         foreach ($roles as $role) {
-            Role::firstOrCreate(
-                ['name' => $role, 'guard_name' => 'sanctum'] // ✅ Hii sasa ni API guard
-            );
+            Role::firstOrCreate([
+                'name' => $role,
+                'guard_name' => 'sanctum' // ✅ FIXED
+            ]);
         }
 
-        $this->command->info('Roles seeded successfully with sanctum guard.');
+        $this->command->info('Roles seeded successfully (sanctum guard).');
     }
 }

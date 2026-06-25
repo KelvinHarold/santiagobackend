@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class UsersSeeder extends Seeder
 {
@@ -13,7 +14,7 @@ class UsersSeeder extends Seeder
         // Delete all users
         User::query()->delete();
 
-        // Reset auto increment (MySQL)
+        // Reset auto increment
         DB::statement('ALTER TABLE users AUTO_INCREMENT = 1');
 
         // Create admin user
@@ -25,8 +26,12 @@ class UsersSeeder extends Seeder
             'revenue_percentage' => 0,
         ]);
 
-        $admin->syncRoles(['Admin']);
+        // ✅ FIX: ensure role exists in sanctum guard
+        $role = Role::findByName('Admin', 'sanctum');
 
-        $this->command->info('✅ Admin user created successfully!');
+        // ✅ Assign role properly
+        $admin->assignRole($role);
+
+        $this->command->info('Admin user created successfully!');
     }
 }

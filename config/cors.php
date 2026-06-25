@@ -12,6 +12,12 @@ return [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
         'http://localhost:3000',
+        'http://server.pincodes.co.tz',
+        'https://server.pincodes.co.tz',
+        'http://pincodes.co.tz',
+        'https://pincodes.co.tz',
+        'http://www.pincodes.co.tz',
+        'https://www.pincodes.co.tz',
     ],
 
     'allowed_origins_patterns' => [],
